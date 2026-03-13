@@ -121,7 +121,12 @@ animation:shimmer 2s infinite;
 100%{ left:100% }
 }
 
-
+.donation-img{
+width:100%;
+border-radius:10px;
+margin-top:10px;
+display:block;
+}
 </style>
 </head>
 
@@ -194,6 +199,7 @@ Calculate Zakat
 <div class="explanation mt-3" id="explanation"></div>
 
 <hr>
+
 
 
 <a href="https://dawateislamiindia.org/donations/social-media" target="_blank">
@@ -287,10 +293,49 @@ let zakat = 0
 if(netWealth >= nisab){
 zakat = netWealth * 0.025
 }
+function calculateZakat(){
 
+let metals = getValue("metals")
+let cash = getValue("cash")
+let bank = getValue("bank")
+let investments = getValue("investments")
+let business = getValue("business")
+let debts = getValue("debts")
+
+let totalAssets =
+metals +
+cash +
+bank +
+investments +
+business
+
+let netWealth = totalAssets - debts
+
+
+/* Calculate Nisab */
+
+const goldNisab = goldPricePerGram * 87.48
+const silverNisab = silverPricePerGram * 612.36
+
+const nisab = Math.min(goldNisab, silverNisab)
+
+
+/* Zakat calculation */
+
+let zakat = 0
+
+if(netWealth >= nisab){
+    zakat = netWealth * 0.025
+}
+
+
+/* Display */
 
 document.getElementById("net").innerText = formatCurrency(netWealth)
 document.getElementById("zakat").innerText = formatCurrency(zakat)
+
+}
+
 
 
 /* Explanation */
@@ -326,4 +371,3 @@ document.getElementById("explanation").innerText = explanation
 
 </body>
 </html>
-
