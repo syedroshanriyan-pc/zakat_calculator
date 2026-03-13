@@ -12,7 +12,7 @@
 <style>
 body{
 background:linear-gradient(135deg,#eef2ff,#f9fbff);
-font-family:system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
 }
 
 .wrapper{
@@ -42,11 +42,6 @@ border-radius:10px;
 padding:10px 12px;
 }
 
-input.form-control:focus{
-box-shadow:0 0 0 2px rgba(25,135,84,0.2);
-border-color:#198754;
-}
-
 .result-box{
 font-size:18px;
 font-weight:600;
@@ -68,31 +63,6 @@ line-height:1.5;
 border-radius:10px;
 padding:10px;
 font-weight:500;
-}
-
-.btn-success:hover{
-transform:translateY(-1px);
-box-shadow:0 5px 15px rgba(0,0,0,0.1);
-}
-
-h2{
-font-weight:700;
-letter-spacing:-0.3px;
-}
-.section-box{
-border:1px solid #e6e9ef;
-border-radius:10px;
-padding:15px;
-margin-top:10px;
-background:#ffffff;
-}
-
-.donate-box{
-border:1px solid #e6e9ef;
-border-radius:12px;
-padding:15px;
-margin-top:15px;
-background:#ffffff;
 }
 
 .shimmer-btn{
@@ -117,15 +87,8 @@ animation:shimmer 2s infinite;
 }
 
 @keyframes shimmer{
-0%{ left:-100% }
-100%{ left:100% }
-}
-
-.donation-img{
-width:100%;
-border-radius:10px;
-margin-top:10px;
-display:block;
+0%{left:-100%}
+100%{left:100%}
 }
 </style>
 </head>
@@ -133,7 +96,6 @@ display:block;
 <body>
 
 <div class="wrapper">
-
 <div class="card p-4">
 
 <h2 class="text-center mb-3">Zakat Calculator</h2>
@@ -142,32 +104,40 @@ display:block;
 Calculate your zakat based on the live market price.
 </p>
 
+<div class="alert alert-warning mt-3">
+<strong>Important Notice:</strong>
+This Zakat calculator provides an estimated calculation based on the values you enter and the current market price of gold and silver used to determine the Nisab threshold. Zakat becomes obligatory only if your net wealth remains above the Nisab for one full lunar year (Hijri year).<br> This tool is intended for guidance purposes only. Individual financial situations may vary, and users are encouraged to consult qualified scholars for precise religious rulings related to their Zakat obligations.
+</div>
+
 <hr>
 
 <h5 class="section-title">Assets</h5>
 
 <div class="mb-3">
-<label class="form-label">Total Value of Gold & Silver you have from 1 year (₹)</label>
+<label class="form-label">Total Value of Gold & Silver owned(₹)</label>
 <input type="number" id="metals" class="form-control">
 </div>
 
 <div class="mb-3">
-<label class="form-label">Cash at Home from 1 year (₹)</label>
+<label class="form-label">Cash at Home(₹)</label>
 <input type="number" id="cash" class="form-control">
 </div>
 
 <div class="mb-3">
-<label class="form-label">cash in bank from 1 year (₹)</label>
+<label class="form-label">Cash in bank Accounts(₹)</label>
 <input type="number" id="bank" class="form-control">
 </div>
 
 <div class="mb-3">
-<label class="form-label">Investments & Shares Value you own from 1 year (₹)</label>
+<label class="form-label">Investment or FD / Bonds / Policies Value(₹)</label>
 <input type="number" id="investments" class="form-control">
 </div>
-
 <div class="mb-3">
-<label class="form-label">Business/current property Value (₹)</label>
+<label class="form-label">Property Held for Sale Value(₹)</label>
+<input type="number" id="property" class="form-control">
+</div>
+<div class="mb-3">
+<label class="form-label">Business / Trading Assets Value(₹)</label>
 <input type="number" id="business" class="form-control">
 </div>
 
@@ -176,7 +146,7 @@ Calculate your zakat based on the live market price.
 <h5 class="section-title">Liabilities</h5>
 
 <div class="mb-3">
-<label class="form-label">Debts /Loans you have (₹)</label>
+<label class="form-label">Debts / Loans you have (₹)</label>
 <input type="number" id="debts" class="form-control">
 </div>
 
@@ -189,65 +159,64 @@ Calculate Zakat
 <h5 class="section-title">Result</h5>
 
 <div class="result-box">
-
-<p>Net Wealth: <span id="net"></span></p>
-
-<p class="text-success">Zakat Payable: <span id="zakat"></span></p>
-
+<p>Net Wealth: <span id="net">₹0</span></p>
+<p class="text-success">Zakat Payable: <span id="zakat">₹0</span></p>
 </div>
 
-<div class="explanation mt-3" id="explanation"></div>
+<div class="explanation mt-3" id="explanation">
+Enter your assets to calculate Zakat.
+</div>
 
 <hr>
 
-
-
 <a href="https://dawateislamiindia.org/donations/social-media" target="_blank">
-
-<button class="btn btn-success w-100 shimmer-btn mb-2">
+<button id="payBtn" class="btn btn-success w-100 shimmer-btn" style="display:none;">
 Pay part Now
 </button>
-
 </a>
 
 </div>
-
-
 </div>
-
-</div>
-
-
 
 <script>
 
 let goldPricePerGram = 0
 let silverPricePerGram = 0
 
+async function loadMetalPrices(){
 
-/* Load live metal prices when page loads */
+try{
 
-async function fetchMetalPrices(){
+const metalRes = await fetch("https://api.metals.live/v1/spot")
+const metalData = await metalRes.json()
 
-const res = await fetch("https://api.metals.live/v1/spot")
-const data = await res.json()
+const goldOunce = metalData.find(v => v[0] === "gold")[1]
+const silverOunce = metalData.find(v => v[0] === "silver")[1]
 
-const goldOunce = data.find(v => v[0] === "gold")[1]
-const silverOunce = data.find(v => v[0] === "silver")[1]
+const usdRes = await fetch("https://api.exchangerate-api.com/v4/latest/USD")
+const usdData = await usdRes.json()
 
-goldPricePerGram = goldOunce / 31.1034768
-silverPricePerGram = silverOunce / 31.1034768
+const usdInr = usdData.rates.INR
+
+goldPricePerGram = (goldOunce / 31.1034768) * usdInr
+silverPricePerGram = (silverOunce / 31.1034768) * usdInr
+
+}catch(e){
+
+goldPricePerGram = 6700
+silverPricePerGram = 265
 
 }
 
-fetchMetalPrices()
+}
 
-
+loadMetalPrices()
 
 function formatCurrency(x){
 return new Intl.NumberFormat('en-IN',{
 style:'currency',
-currency:'INR'
+currency:'INR',
+maximumFractionDigits:0
 }).format(x)
 }
 
@@ -255,105 +224,48 @@ function getValue(id){
 return parseFloat(document.getElementById(id).value) || 0
 }
 
-
-
 function calculateZakat(){
 
 let metals = getValue("metals")
 let cash = getValue("cash")
 let bank = getValue("bank")
 let investments = getValue("investments")
+let property = getValue("property")
 let business = getValue("business")
 let debts = getValue("debts")
-
 
 let totalAssets =
 metals +
 cash +
 bank +
 investments +
+property+
 business
-
 
 let netWealth = totalAssets - debts
 
+let goldNisab = goldPricePerGram * 87.48
+let silverNisab = silverPricePerGram * 612.36
 
-/* Nisab calculation */
-
-const goldNisab = goldPricePerGram * 87.48
-const silverNisab = silverPricePerGram * 612.36
-
-const nisab = Math.min(goldNisab, silverNisab)
-
-
-/* Zakat */
+let nisab = Math.min(goldNisab, silverNisab)
 
 let zakat = 0
 
 if(netWealth >= nisab){
 zakat = netWealth * 0.025
 }
-function calculateZakat(){
-
-let metals = getValue("metals")
-let cash = getValue("cash")
-let bank = getValue("bank")
-let investments = getValue("investments")
-let business = getValue("business")
-let debts = getValue("debts")
-
-let totalAssets =
-metals +
-cash +
-bank +
-investments +
-business
-
-let netWealth = totalAssets - debts
-
-
-/* Calculate Nisab */
-
-const goldNisab = goldPricePerGram * 87.48
-const silverNisab = silverPricePerGram * 612.36
-
-const nisab = Math.min(goldNisab, silverNisab)
-
-
-/* Zakat calculation */
-
-let zakat = 0
-
-if(netWealth >= nisab){
-    zakat = netWealth * 0.025
-}
-
-
-/* Display */
 
 document.getElementById("net").innerText = formatCurrency(netWealth)
 document.getElementById("zakat").innerText = formatCurrency(zakat)
 
-}
+let explanation=""
 
-
-
-/* Explanation */
-
-let explanation = ""
-
-if(netWealth <= 0){
-
-explanation = "Enter your assets to calculate Zakat."
-
-}
-else if(netWealth < nisab){
+if(netWealth < nisab){
 
 explanation =
 "Your net wealth is below the Nisab threshold.\nZakat is not required."
 
-}
-else{
+}else{
 
 explanation =
 "Your net wealth exceeds Nisab.\n\n"+
@@ -364,6 +276,9 @@ explanation =
 }
 
 document.getElementById("explanation").innerText = explanation
+if(zakat > 0){
+document.getElementById("payBtn").style.display = "block"
+}
 
 }
 
